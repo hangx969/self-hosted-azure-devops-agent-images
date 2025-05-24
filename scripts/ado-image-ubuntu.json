@@ -1,0 +1,56 @@
+{
+  "builders": [
+    {
+      "type": "azure-arm",
+      "cloud_environment_name": "AzureChinaCloud",
+      "tenant_id": "12345678-1234-1234-1234-123456789012",
+      "client_id": "{{user `client_id`}}",
+      "client_secret": "{{user `client_secret`}}",
+      "managed_image_name": "ubuntu2204",
+      "managed_image_resource_group_name": "rg-shared-image-gallery-chinanorth3",
+      "image_publisher": "Canonical",
+      "image_offer": "0001-com-ubuntu-server-jammy",
+      "image_sku": "22_04-lts",
+      "vm_size": "Standard_DS2_v2",
+      "os_type": "Linux",
+      "subscription_id": "12345678-1234-123456789012",
+      "build_resource_group_name": "rg-custom-image-build-chinanorth3",
+      "private_virtual_network_with_public_ip": "false",
+      "async_resourcegroup_delete": "true",
+      "virtual_network_resource_group_name": "rg-network-chinanorth3",
+      "virtual_network_name": "vnet-chinanorth3",
+      "virtual_network_subnet_name": "snet-image-build",
+      "communicator": "ssh",
+      "ssh_timeout": "10m",
+      "ssh_username": "ubuntu",
+      "ssh_keep_alive_interval": "10s",
+      "ssh_private_key_file": "{{user `ssh_private_key_file`}}",
+      "shared_image_gallery_destination": {
+        "storage_account_type": "Standard_LRS",
+        "subscription": "12345678-1234-1234-1234-123456789012",
+        "resource_group": "rg-shared-image-gallery-chinanorth3",
+        "gallery_name": "shared_image_gallery_cn3",
+        "image_name": "Ubuntu_2204_custom_ADOagent_gen1",
+        "image_version": "{{user `image_version`}}",
+        "replication_regions": [
+          "chinanorth3"
+        ]
+      }
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E bash '{{ .Path }}'",
+      "script": "scripts/default_packages.sh"
+    }
+  ],
+
+  "variables": {
+    "ssh_private_key_file": "",
+    "image_version": "",
+    "client_id": "",
+    "client_secret": ""
+  }
+}

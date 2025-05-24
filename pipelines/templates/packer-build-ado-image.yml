@@ -1,0 +1,143 @@
+parameters:
+  serviceConnection: 'STRING'
+  tenantID: 'STRING'
+  subscriptionID: 'STRING'
+  imageGalleryRG: 'STRING'
+  imageGalleryName: 'STRING'
+  imageGalleryDifName: 'STRING'
+
+stages:
+    - stage: Build_Image_Ubuntu
+      displayName: "Build ADO Image Based on Ubuntu"
+      dependsOn: []
+      jobs:
+        - job: "Build_Ubuntu"
+          displayName: "Build ADO image based on Ubuntu"
+          pool: $(AGENT_POOL)
+          steps:
+
+            - script: |
+
+                openssl genpkey -algorithm RSA -out $(Pipeline.Workspace)/private_key.pem
+                openssl rsa -pubout -in $(Pipeline.Workspace)/private_key.pem -out $(Pipeline.Workspace)/public_key.pem
+                echo "##vso[task.setvariable variable=SSH_PRIVATE_KEY_PATH]$(Pipeline.Workspace)/private_key.pem"
+
+              displayName: 'Generate SSH Key Pair'
+              env:
+                OPENSSL_CONF: /usr/lib/ssl/openssl.cnf
+
+            - task: PackerTool@0
+              displayName: "Install Packer"
+              inputs:
+                version: $(PACKER_VERSION)
+
+            - script: |
+
+                set -e
+
+                # Append custom packages to main script
+                echo "Merge custom packages to the main script"
+                cat scripts/custom_packages.sh >> scripts/default-packages.sh
+                echo "custom packages scripts Merged"
+
+                # Append ADO agent packages to main script
+                echo "Merge ADO agent packages to the main script"
+                cat scripts/ado_agent_packages.sh >> scripts/default-packages.sh
+                echo "ADO agent packages scripts Merged"
+
+                # Append deprovisioning VM command to main script to make it generic
+                echo '/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync' >> scripts/default-packages.sh
+              displayName: 'Merge custom scripts'
+
+            - task: AzureCLI@2
+              displayName: 'Fetch Latest agent version and assign image version'
+              env:
+                RG: ${{ parameters.imageGalleryRG }}
+                IG_NAME: ${{ parameters.imageGalleryName }}
+                IDIF_NAME: ${{ parameters.imageGalleryDifName }}
+                OS_NAME_FORMATTED: $(OS_NAME_FORMATTED)
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+
+                  set -e
+
+                  latest_image_version=$(az sig image-version list --resource-group $RG --gallery-name $IG_NAME --gallery-image-definition $IDIF_NAME  --query "[].{name:name}" -o tsv | sort -V | tail -n 1)
+
+                  latest_ado_package_version="$(curl --silent "https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest" | python3 -c "import sys, json; print(json.load(sys.stdin)['tag_name'].lstrip('v'))")00"
+
+                  if [[ "$latest_image_version" == "$latest_ado_package_version" ]]; then
+                    IMAGE_VERSION=$(echo $latest_ado_package_version | awk -F. -v OFS=. '{$3=$3+1; print}')
+                  else
+                    IMAGE_VERSION="$latest_ado_package_version"
+                  fi
+
+                  echo "VM image version for the Azure Shared Image Gallery: $IMAGE_VERSION"
+                  echo "##vso[task.setvariable variable=IMAGE_VERSION]$IMAGE_VERSION"
+
+                  chmod 600 $(SSH_PRIVATE_KEY_PATH)
+
+            - task: AzureCLI@2
+              displayName: 'Fetch spn client id and secret'
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+
+                  set -e
+                  echo "Fetching spn client id and secret"
+                  spn_client_id=$(az ad sp list --display-name "spn-agent" --query "[].appId" -o tsv)
+                  spn_client_secret=$(az ad sp credential reset --id $spn_client_id --query "password" -o tsv)
+
+                  echo "##vso[task.setvariable variable=CLIENT_ID]$spn_client_id"
+                  echo "##vso[task.setvariable variable=CLIENT_SECRET]$spn_client_secret"
+
+            - task: Bash@3
+              displayName: 'Wait for 1 minute for spn client_secret to become valid'
+              inputs:
+                targetType: 'inline'
+                script: 'sleep 60'
+
+            - task: PackerBuild@1
+              displayName: "Packer Build $(MANAGED_IMAGE_NAME)"
+              inputs:
+                templateType: 'custom'
+                customTemplateLocation: 'scripts/ado-image-ubuntu.json'
+                customTemplateParameters: |
+                  {
+                    "ssh_private_key_file": "$(SSH_PRIVATE_KEY_PATH)",
+                    "image_version": "$(IMAGE_VERSION)",
+                    "client_id": "$(CLIENT_ID)",
+                    "client_secret": "$(CLIENT_SECRET)"
+                  }
+                packerVersion: '$(PACKER_VERSION)'
+
+        - job: Cleanup_Builded_Image
+          displayName: "Cleanup Builded Image"
+          dependsOn: Build_Ubuntu
+          condition: or(succeeded(), failed())
+          pool: $(AGENT_POOL)
+          steps:
+            - task: AzureCLI@2
+              displayName: "Cleanup created image - ${{ parameters.imageGalleryRG }}/$(MANAGED_IMAGE_NAME)"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+
+                  set -e
+                  rm -f $SSH_PRIVATE_KEY_PATH
+                  az image delete --name $MIN --resource-group $RG
+                  if [ $? -eq 0 ]; then
+                    echo -e "Successfully deleted \n\t Image: $MIN in resource group: $RG."
+                  else
+                    echo -e "Failed to delete\n\tImage: $MIN in resource group: $RG."
+                  fi
+              env:
+                RG: ${{ parameters.imageGalleryRG }}
+                MIN: $(MANAGED_IMAGE_NAME)
+

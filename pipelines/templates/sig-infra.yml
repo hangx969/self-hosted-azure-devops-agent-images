@@ -1,0 +1,113 @@
+parameters:
+  pipelineName: 'STRING'
+  backendServiceArm: 'STRING'
+  backendAzureRmResourceGroupName: 'STRING'
+  backendAzureRmStorageAccountName: 'STRING'
+  backendAzureRmContainerName: 'STRING'
+  backendAzureRmKey: 'STRING'
+
+stages:
+  - stage: "${{ parameters.pipelineName }}_Plan"
+    displayName: "${{ parameters.pipelineName }}_Plan"
+    dependsOn: []
+    jobs:
+      - job: Plan
+        displayName: "PLAN"
+        variables:
+          ARM_ENVIRONMENT: china
+        pool: $(AGENT_POOL)
+        workspace:
+          clean: all
+        steps:
+          - checkout: self
+          - task: TerraformInstaller@0
+            inputs:
+              terraformVersion: $(TF_VERSION)
+
+          - task: TerraformTaskV4@4
+            displayName: "Terraform Init"
+            inputs:
+              provider: "azurerm"
+              command: "init"
+              backendServiceArm: ${{ parameters.backendServiceArm }}
+              backendAzureRmResourceGroupName: ${{ parameters.backendAzureRmResourceGroupName }}
+              backendAzureRmStorageAccountName: ${{ parameters.backendAzureRmStorageAccountName }}
+              backendAzureRmContainerName: ${{ parameters.backendAzureRmContainerName }}
+              backendAzureRmKey: ${{ parameters.backendAzureRmKey }}
+              workingDirectory: "$(System.DefaultWorkingDirectory)"
+              commandOptions: '-input=false'
+            env:
+              ARM_STORAGE_USE_AZUREAD: true
+              ARM_USE_AZUREAD: true
+
+          - task: TerraformTaskV4@4
+            displayName: "Terraform Plan"
+            inputs:
+              provider: "azurerm"
+              command: "plan"
+              environmentServiceNameAzureRM: ${{ parameters.backendServiceArm }}
+              workingDirectory: "$(System.DefaultWorkingDirectory)"
+              commandOptions: '-out=tfplan -input=false'
+            env:
+              ARM_STORAGE_USE_AZUREAD: true
+              ARM_USE_AZUREAD: true
+
+  - stage: "${{ parameters.pipelineName }}_Apply"
+    displayName: "${{ parameters.pipelineName }}_Apply"
+    dependsOn: ["${{ parameters.pipelineName }}_Plan"]
+    condition: and(succeeded(), eq(variables.IS_MAIN, 'false'))
+    jobs:
+    - deployment: Apply
+      displayName: "APPLY"
+      variables:
+        ARM_ENVIRONMENT: china
+      environment: "lz-cn-xxxx-image"
+      pool: $(AGENT_POOL)
+      timeoutInMinutes: 120
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - task: TerraformInstaller@0
+                inputs:
+                  terraformVersion: $(TF_VERSION)
+
+              - task: TerraformTaskV4@4
+                displayName: 'Terraform Init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)'
+                  backendServiceArm: ${{ parameters.backendServiceArm }}
+                  backendAzureRmResourceGroupName: ${{ parameters.backendAzureRmResourceGroupName }}
+                  backendAzureRmStorageAccountName: ${{ parameters.backendAzureRmStorageAccountName }}
+                  backendAzureRmContainerName: ${{ parameters.backendAzureRmContainerName }}
+                  backendAzureRmKey: ${{ parameters.backendAzureRmKey }}
+                  commandoptions: '-input=false -reconfigure'
+                env:
+                  ARM_STORAGE_USE_AZUREAD: true
+                  ARM_USE_AZUREAD: true
+
+              - task: TerraformTaskV4@4
+                displayName: 'Terraform Show'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'show'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)'
+                  commandOptions: 'tfplan'
+                  environmentServiceNameAzureRM: ${{ parameters.backendServiceArm }}
+                env:
+                  ARM_STORAGE_USE_AZUREAD: true
+                  ARM_USE_AZUREAD: true
+
+              - task: TerraformTaskV4@4
+                displayName: 'Terraform Apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)'
+                  environmentServiceNameAzureRM: ${{ parameters.backendServiceArm }}
+                  commandOptions: '-input=false tfplan'
+                env:
+                  ARM_STORAGE_USE_AZUREAD: true
+                  ARM_USE_AZUREAD: true
