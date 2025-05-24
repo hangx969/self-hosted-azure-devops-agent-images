@@ -7,14 +7,14 @@ Basic usage of this module is as follows:
 ```terraform
 module "example" {
   	 source  = "<module-path>"
-
+        
 	 # Required variables
-        	 gallery_name  =
-        	 gallery_rg_name  =
-
+        	 gallery_name  = 
+        	 gallery_rg_name  = 
+        
 	 # Optional variables
         	 default_tags  = {}
-        	 description  = "Shared Image Gallery for xxxx devops agent pool images"
+        	 description  = "Shared Image Gallery for devops agent pool images"
         	 location  = "chinanorth3"
 }
 ```
@@ -30,7 +30,7 @@ module "example" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | n/a | `map(string)` | `{}` | no |
-| <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `"Shared Image Gallery for xxxx devops agent pool images"` | no |
+| <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `"Shared Image Gallery for devops agent pool images"` | no |
 | <a name="input_gallery_name"></a> [gallery\_name](#input\_gallery\_name) | n/a | `string` | n/a | yes |
 | <a name="input_gallery_rg_name"></a> [gallery\_rg\_name](#input\_gallery\_rg\_name) | n/a | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"chinanorth3"` | no |

@@ -5,13 +5,13 @@ variables:
   TF_VERSION: '1.11.2'
   IS_MAIN: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
 
-  AGENT_POOL: "LZ-cn-xxxx-dev"
-  SERVICE_CONNECTION: "lz-cn-spn-xxxx-image"
+  AGENT_POOL: "LZ-cn-dev"
+  SERVICE_CONNECTION: "lz-cn-spn-image"
 
-  RM_RG_NAME: 'rg-backend-xxxx-chinanorth3'
-  RM_SA_NAME: "satfstatexxxx"
+  RM_RG_NAME: 'rg-backend-chinanorth3'
+  RM_SA_NAME: "satfstate"
   RM_CONTAINER_NAME: 'state'
-  RM_Key: "xxxx-image-backend.tfstate"
+  RM_Key: "image-backend.tfstate"
 
 stages:
   - template: "templates/sig-infra.yml"

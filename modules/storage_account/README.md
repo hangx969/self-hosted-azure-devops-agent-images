@@ -14,9 +14,10 @@ module "example" {
 	 # Optional variables
         	 location  = "chinanorth3"
         	 principal_ids  = [
-  "3572dc78-1d9f-4b38-9445-2a3f497783d5",
-  "75ae197e-17f5-4d8a-ba72-cd3c4d400e34"
+  "123",
+  "456"
 ]
+        	 subscription_id  = "12345678-1234-1234-1234-123456789012"
 }
 ```
 ## Resources
@@ -34,8 +35,9 @@ module "example" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"chinanorth3"` | no |
-| <a name="input_principal_ids"></a> [principal\_ids](#input\_principal\_ids) | n/a | `list(string)` | <pre>[<br/>  "3572dc78-1d9f-4b38-9445-2a3f497783d5",<br/>  "75ae197e-17f5-4d8a-ba72-cd3c4d400e34"<br/>]</pre> | no |
+| <a name="input_principal_ids"></a> [principal\_ids](#input\_principal\_ids) | n/a | `list(string)` | <pre>[<br/>  "123",<br/>  "456"<br/>]</pre> | no |
 | <a name="input_sig_resource_group"></a> [sig\_resource\_group](#input\_sig\_resource\_group) | n/a | `any` | n/a | yes |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | n/a | `string` | `"12345678-1234-1234-1234-123456789012"` | no |
 
 ## Outputs
 

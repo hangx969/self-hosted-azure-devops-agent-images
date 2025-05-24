@@ -5,13 +5,12 @@ variables:
   PACKER_VERSION: '1.12.0'
 
 # Tenant variables:
-  AGENT_POOL: "LZ-cn-xxxx-dev"
+  AGENT_POOL: "LZ-cn-dev"
   SERVICE_CONNECTION: "lz-cn-spn-image"
   AZURE_CLOUD_ENV: "AzureChinaCloud"
-  TENANT_ID: "12345678"
-  SUBSCRIPTION_ID: "1234567890"
+  TENANT_ID: "12345678-1234-1234-1234-123456789012"
+  SUBSCRIPTION_ID: "12345678-1234-1234-1234-123456789012"
   LOCATION: "chinanorth3"
-
 
 # Os variables:
   OS_NAME_FORMATTED: "Ubuntu_2204_ADOagent_gen1"

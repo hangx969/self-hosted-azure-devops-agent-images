@@ -18,14 +18,13 @@ module "example" {
         	 default_tags  = {}
         	 images  = []
         	 location  = "chinanorth3"
-        	 subscription_id  = "34f170aa-f0c2-489c-ba2f-d5d429c08835"
+        	 subscription_id  = "12345678-1234-1234-1234-123456789012"
 }
 ```
 ## Resources
 
 | Name | Type |
 |------|------|
-| [azurerm_federated_identity_credential.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_resource_group.build-rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.ig-role-assignment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_shared_image.shared-image-dif](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/shared_image) | resource |
@@ -42,7 +41,7 @@ module "example" {
 | <a name="input_images"></a> [images](#input\_images) | n/a | `list` | `[]` | no |
 | <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"chinanorth3"` | no |
 | <a name="input_sig_resource_group"></a> [sig\_resource\_group](#input\_sig\_resource\_group) | n/a | `any` | n/a | yes |
-| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | n/a | `string` | `"34f170aa-f0c2-489c-ba2f-d5d429c08835"` | no |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | n/a | `string` | `"12345678-1234-1234-1234-123456789012"` | no |
 | <a name="input_uai_name"></a> [uai\_name](#input\_uai\_name) | n/a | `any` | n/a | yes |
 
 ## Outputs

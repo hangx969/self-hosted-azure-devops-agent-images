@@ -1,12 +1,12 @@
 
 variable "tenant_id" {
   type    = string
-  default = "xxxx"
+  default = "12345678-1234-1234-1234-123456789012"
 }
 
 variable "subscription_id" {
   type    = string
-  default = "xxxx"
+  default = "12345678-1234-1234-1234-123456789012"
 }
 
 
@@ -19,7 +19,7 @@ variable "default_tags" {
   type    = map(string)
   default = {
     "created-by"  = "terraform"
-    "devops-repo" = "lz-cn-xxxx-image-gallery"
+    "devops-repo" = "lz-cn-image-gallery"
   }
 }
 

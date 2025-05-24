@@ -23,7 +23,7 @@ resource "azurerm_role_assignment" "ig-role-assignment" {
 #   name                = "ado-service-connection"
 #   resource_group_name = var.sig_resource_group.name
 #   audience            = ["api://AzureADTokenExchange"]
-#   issuer              = "https://vstoken.dev.azure.com/xxxx"
+#   issuer              = "https://vstoken.dev.azure.com/<organization>"
 #   parent_id           = azurerm_user_assigned_identity.ig-uai.id
 #   subject             = "sc://xxx/xxx/xxxx"
 # }

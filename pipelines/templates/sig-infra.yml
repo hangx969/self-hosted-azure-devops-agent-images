@@ -61,7 +61,7 @@ stages:
       displayName: "APPLY"
       variables:
         ARM_ENVIRONMENT: china
-      environment: "lz-cn-xxxx-image"
+      environment: "lz-cn-image"
       pool: $(AGENT_POOL)
       timeoutInMinutes: 120
       strategy:
